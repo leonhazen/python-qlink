@@ -1,0 +1,81 @@
+service: python-qlink
+# app and org for use with dashboard.serverless.com
+app: qlink
+org: leonhazen
+
+plugins:
+  - serverless-python-requirements
+package:
+  exclude:
+    - README.md
+    - package.json
+    - package-lock.json
+    - requirements.txt
+
+provider:
+  name: aws
+  runtime: python3.8
+  region: ap-southeast-2
+  environment:
+    DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+  iamRoleStatements:
+  - Effect: Allow
+    Action:
+      - dynamodb:Query
+      - dynamodb:Scan
+      - dynamodb:GetItem
+      - dynamodb:PutItem
+      - dynamodb:UpdateItem
+      - dynamodb:DeleteItem
+      - dynamodb:DescribeTable
+    Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+
+functions:
+  create:
+    handler: api/api.create
+    events:
+      - http:
+          path: /create
+          method: post
+          cors: true
+
+  get:
+    handler: api/api.get
+    events:
+      - http:
+          path: get/{id}
+          method: /get
+          cors: true
+          integration: lambda
+          request:
+            paths:
+              id: true
+
+  redir:
+    handler: api/api.redir
+    events:
+      - http:
+          path: /{id}
+          method: get
+          cors: true
+          integration: lambda
+          request:
+            paths:
+              id: true
+
+resources:
+  Resources:
+    QlinkURLTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
