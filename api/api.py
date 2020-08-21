@@ -19,12 +19,14 @@ def create(event, context):
             'body': json.dumps({'error_message': 'URL missing'})
         }
 
-    if !checkers.is_url(data['url']):
+    if not checkers.is_url(data['url']):
         logging.error('URL is invalid')
         return {
             'statusCode': 422,
             'body': json.dumps({'error_message': 'URL invalid'})
         }
+
+    
 
     # Placeholder
     return {
