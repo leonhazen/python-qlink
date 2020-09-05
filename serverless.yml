@@ -5,8 +5,17 @@ org: leonhazen
 
 plugins:
   - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: non-linux
+
 package:
   exclude:
+    - node_modules/**
+    - .idea/**
+    - .requirements/**
+    - env/**
     - README.md
     - package.json
     - package-lock.json
@@ -14,11 +23,11 @@ package:
 
 provider:
   name: aws
-  runtime: python3.8
+  runtime: python3.7
   region: ap-southeast-2
   environment:
     DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
-    AWS_REGION: ${self:provider.region}
+    REGION: ${self:provider.region}
   iamRoleStatements:
   - Effect: Allow
     Action:
@@ -44,8 +53,8 @@ functions:
     handler: api/api.get
     events:
       - http:
-          path: get/{id}
-          method: /get
+          path: /get/{id}
+          method: get
           cors: true
           integration: lambda
           request:
